@@ -51,7 +51,7 @@
 RGX-OPEN-ITEM - match beggining of the item, array or object, ignore comments.
 RGX-CLOSE-ITEM - match finishing of the item, array or object, ignore comments."
   (let ((rgx-open-item "^.*[{[]\\s-*\\([//#].+\\)?$")
-        (rgx-close-item "^.*[\]}]\\s-*\\([//#].+\\)?$"))
+        (rgx-close-item "^.*[]}]\\s-*?,?\\s-*?\\([//#].+\\)?$"))
     (beginning-of-line)
     (if (bobp)
         (indent-line-to 0)
