@@ -46,39 +46,45 @@
         ))
 
 (defun calculate-hocon-indent ()
-  (beginning-of-line)
-  (if (bobp)
-      (indent-line-to 0)
-    (let ((new-indent nil)
-          (not-indented t))
-      (if (looking-at "^\\s-*}\\s-*$")
+  "Set and return current indention.
+
+RGX-OPEN-ITEM - match beggining of the item, array or object, ignore comments.
+RGX-CLOSE-ITEM - match finishing of the item, array or object, ignore comments."
+  (let ((rgx-open-item "^.*[{[]\\s-*\\([//#].+\\)?$")
+        (rgx-close-item "^.*[]}]\\s-*?,?\\s-*?\\([//#].+\\)?$"))
+    (beginning-of-line)
+    (if (bobp)
+        (indent-line-to 0)
+      (let ((new-indent nil)
+            (not-indented t))
+        (if (looking-at rgx-close-item)
+            (save-excursion
+              (while not-indented
+                (forward-line -1)
+                (cond
+                 ((looking-at rgx-close-item)
+                  (progn
+                    (setq new-indent (- (current-indentation) 2))
+                    (setq not-indented nil)))
+                 ((looking-at rgx-open-item)
+                  (progn
+                    (setq new-indent (current-indentation))
+                    (setq not-indented nil)))
+                 ((bobp)
+                  (progn (setq not-indented nil))))))
           (save-excursion
             (while not-indented
               (forward-line -1)
-              (cond
-               ((looking-at "^.*}\\s-*$")
-                (progn
-                  (setq new-indent (- (current-indentation) 2))
-                  (setq not-indented nil)))
-               ((looking-at "^.*{\\s-*$")
-                (progn
-                  (setq new-indent (current-indentation))
-                  (setq not-indented nil)))
-               ((bobp)
-                (progn (setq not-indented nil))))))
-        (save-excursion
-          (while not-indented
-            (forward-line -1)
-            (cond ((looking-at "^.*}\\s-*$")
-                   (progn
-                     (setq new-indent (current-indentation))
-                     (setq not-indented nil)))
-                  ((looking-at "^.*{\\s-*$")
-                   (progn
-                     (setq new-indent (+ (current-indentation) 2))
-                     (setq not-indented nil)))
-                  ((bobp) (setq not-indented nil))))))
-      new-indent)))
+              (cond ((looking-at rgx-close-item)
+                     (progn
+                       (setq new-indent (current-indentation))
+                       (setq not-indented nil)))
+                    ((looking-at rgx-open-item)
+                     (progn
+                       (setq new-indent (+ (current-indentation) 2))
+                       (setq not-indented nil)))
+                    ((bobp) (setq not-indented nil))))))
+        new-indent))))
 
 (defun hocon-indent-line ()
   "Indent line for hocon."
